@@ -1,0 +1,9 @@
+name = Sales Person Alert Module
+description = Notifies sales people if a company they service is mentioned in an article
+package = Other
+core = 7.x
+
+configure = admin/config/system/spam
+
+files[] = spam.module
+files[] = spam.admin.inc
