@@ -2,6 +2,18 @@
 
 
 /**
+ * Implements hook_permission().
+ */
+function spam_permission() {
+  return array(
+    'administer spam settings' => array(
+      'title' => t('Administer Sales Person Alert Module'),
+      'description' => t('Edit message, sender, and subject of the Sales Person Alert Module'),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function spam_menu() {
@@ -29,24 +41,15 @@ function spam_node_presave($node) {
   $notified = FALSE;
   $mail = array();
   $sales_reps = array();
-
-  // If the node is of a certain content type and if there's a company set,
-  // then proceed
+  //dpm($node);
 
   if (($node->type == 'article' || 'video' || '360_package_spin_rotate')  && (isset($node->field_companies)) && (!in_array($nid, $nodes))) {
-
-  // Check through the array of nodes that have been notified already and
-  // see if the salespeople have been notified already
-
     foreach ($nodes as $node_id) {
       if ($node_id == $nid) {
         $notified = TRUE;
         break;
       }
     }
-
-    // if salespeople haven't been notified, load the companies as a list
-
     if ($notified != TRUE) {
       $companies = $node->field_companies[LANGUAGE_NONE];
       $company_names = implode(", ", spam_companies($companies));
@@ -56,13 +59,8 @@ function spam_node_presave($node) {
           $sales_reps[] = $rep;
         }
       }
-
-      // make sure that there are sales reps to be notified before
-      // notifying the sales reps
-
       if (count($sales_reps) > 0) {
         foreach ($sales_reps as $rep) {
-          // check and find the email addresses of the sales reps
           $addresses = spam_addresses($rep);
           foreach ($addresses as $address) {
             if (!in_array($address, $mail)) {
@@ -71,21 +69,16 @@ function spam_node_presave($node) {
           }
         }
       }
-
-      // check number of email addresses and and prep them to send
-
       if (count($mail) > 0) {
         $to = implode(', ', $mail);
-        $params['url'] = 'http://www.example.com/node/' . $node->nid;
+        $params['url'] = 'http://www.pp-oem.com/node/' . $node->nid;
         $params['company'] = $company_names;
         $key = 'sales_notify';
         $module = 'spam';
-        $from = variable_get('spam_from', 'admin@example.com');
-        // prep the mail to be sent
+        $from = variable_get('spam_from', 'admin@pp-oem.com');
         drupal_mail($module, $key, $to, language_default(), $params, $from, $send = TRUE);
       }
       $nodes[] = $nid;
-      // add the node to the array of notified nodes
       variable_set('sales_rep_notified', $nodes);
     }
   }
@@ -108,12 +101,6 @@ function spam_mail($key, &$message, $params) {
   }
 }
 
- /**
-  *  A function to find the users who are attached to a company
-  *  @param $company
-  *    The company to be searched through
-  *  @return either the UIDs of the attached users or NULL
-  */
 
 function spam_users($company) {
   $result = db_select('field_data_field_sales_rep', 'r')
@@ -130,13 +117,6 @@ function spam_users($company) {
   }
 }
 
- /**
-  *  A function to find the email of the users
-  *  @param $rep
-  *    The UID of the sales rep
-  *  @return either the email addresses of the attached users or NULL
-  */
-
 function spam_addresses($rep) {
   $result = db_select('users', 'u')
             ->fields('u', array('mail','uid'))
@@ -152,15 +132,6 @@ function spam_addresses($rep) {
     return null;
   }
 }
-
- /**
-  *  The function to search for the company name(s) attached to a node
-  *
-  *  @param $companies
-  *     the array of companies within the node
-  *
-  *   @return either the company names or null
-  */
 
 function spam_companies($companies) {
   $names = array();
