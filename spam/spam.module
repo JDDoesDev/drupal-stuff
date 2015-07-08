@@ -41,9 +41,10 @@ function spam_node_presave($node) {
   $notified = FALSE;
   $mail = array();
   $sales_reps = array();
+  $types = array('article' || 'video' || '360_package_spin_rotate');
   //dpm($node);
 
-  if (($node->type == 'article' || 'video' || '360_package_spin_rotate')  && (isset($node->field_companies)) && (!in_array($nid, $nodes))) {
+  if (in_array($node->type, $types) && (isset($node->field_companies)) && (!in_array($nid, $nodes))) {
     foreach ($nodes as $node_id) {
       if ($node_id == $nid) {
         $notified = TRUE;
